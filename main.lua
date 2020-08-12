@@ -30,6 +30,7 @@ end
 
 function love.load()
     font = love.graphics.newFont(24)
+    miniFont = love.graphics.newFont(16)
     if not time then time = 0 end
     animationCounter = 0
     hungerCounter = 0
@@ -39,11 +40,12 @@ function love.load()
     love.graphics.setBackgroundColor( backgroundColor )
     love.graphics.setColor( 0 , 0 , 0 )
     titleBox = {box = {x = 9*12 , y = 16*2}}
-    optionBox_1 = {box = {x = 9*12 , y = 16*20 , w = 140 , h = 40}}
-    optionBox_2 = {box = {x = 9*12 , y = 16*24 , w = 140 , h = 40}}
-    optionBox_3 = {box = {x = 9*12 , y = 16*28 , w = 140 , h = 40}}
-    optionBox_4 = {box = {x = 9*12 , y = 16*32 , w = 140 , h = 40}}
-    optionBox_5 = {box = {x = 9*12 , y = 16*36 , w = 140 , h = 40}}
+    optionBox = {}
+    optionBox[1] = {box = {x = 9*12 , y = 16*20 , w = 140 , h = 40}}
+    optionBox[2] = {box = {x = 9*12 , y = 16*24 , w = 140 , h = 40}}
+    optionBox[3] = {box = {x = 9*12 , y = 16*28 , w = 140 , h = 40}}
+    optionBox[4] = {box = {x = 9*12 , y = 16*32 , w = 140 , h = 40}}
+    optionBox[5] = {box = {x = 9*12 , y = 16*36 , w = 140 , h = 40}}
 
     player = {
         coins = 10,
@@ -66,12 +68,24 @@ function love.load()
         img = love.graphics.newImage( "images/pet2.png" ),
         miniImg = love.graphics.newImage( 'images/pet2mini.png')
     }
+    pet3 = {
+        name = 'Guz',
+        strength = 1,
+        stamina = 5,
+        carisma = 0,
+        img = love.graphics.newImage( "images/pet3.png" ),
+        miniImg = love.graphics.newImage( 'images/pet3mini.png')
+    }
     mainPetBox = {pet = pet1 , box = {x = 9*12 , y = 16*4 }}
-    petBox_1 = {pet = pet2 , box = {x = 9*2 , y = 16*8 , w = 50 , h = 50}}
-    petBox_2 = {box = {x = 9*2 , y = 16*12 , w = 50 , h = 50}}
-    petBox_3 = {box = {x = 9*2 , y = 16*16 , w = 50 , h = 50}}
-
+    petBox = {
+    {pet = pet2 , box = {x = 9*2 , y = 16*8 , w = 50 , h = 50}},
+    {pet = pet3 , box = {x = 9*2 , y = 16*13 , w = 50 , h = 50}},
+    {box = {x = 9*2 , y = 16*17 , w = 50 , h = 50}}
+    }
     menu = true
+
+
+    loadGame()
 end
 
 function love.update(dt)
@@ -82,8 +96,8 @@ end
 function love.draw()
     if menu then
         love.graphics.draw(love.graphics.newText( font , 'MAIN MENU' ) , titleBox.box.x , titleBox.box.y )
-        love.graphics.draw(love.graphics.newText( font , 'CONTINUE' ) , optionBox_1.box.x , optionBox_1.box.y)
-        love.graphics.draw(love.graphics.newText( font , 'NEW GAME' ), optionBox_2.box.x , optionBox_2.box.y)
+        love.graphics.draw(love.graphics.newText( font , 'CONTINUE' ) , optionBox[1].box.x , optionBox[1].box.y)
+        love.graphics.draw(love.graphics.newText( font , 'NEW GAME' ), optionBox[2].box.x , optionBox[2].box.y)
     elseif farm then
         love.graphics.draw(love.graphics.newText( font , '     FARM' ) , titleBox.box.x , titleBox.box.y  )
         love.graphics.print(math.floor(time))
@@ -95,23 +109,25 @@ function love.draw()
         love.graphics.print('Gems: '..player.gems , 9*20 , 0)
         love.graphics.print('Rank: '..player.rank , 9*28 , 0)
         love.graphics.draw( mainPetBox.pet.img , mainPetBox.box.x , mainPetBox.box.y )
-        if petBox_1.pet then love.graphics.draw( petBox_1.pet.miniImg , petBox_1.box.x , petBox_1.box.y ) end
-        if petBox_2.pet then love.graphics.draw( petBox_2.pet.miniImg , petBox_2.box.x , petBox_2.box.y ) end
-        if petBox_3.pet then love.graphics.draw( petBox_3.pet.miniImg , petBox_3.box.x , petBox_3.box.y ) end
-        love.graphics.draw(love.graphics.newText( font , 'ADVENTURE' ) , optionBox_4.box.x , optionBox_4.box.y )
+        for i = 1 , #petBox do
+            if petBox[i].pet then 
+                love.graphics.draw( petBox[i].pet.miniImg , petBox[i].box.x , petBox[i].box.y )
+                love.graphics.draw( love.graphics.newText(miniFont,petBox[i].pet.name) , petBox[i].box.x + 9*2 , petBox[i].box.y - 16 )
+            end
+        end
+        love.graphics.draw(love.graphics.newText( font , 'ADVENTURE' ) , optionBox[4].box.x , optionBox[4].box.y )
     elseif adventure then
         love.graphics.draw(love.graphics.newText( font , 'ADVENTURE' ) , titleBox.box.x , titleBox.box.y  )
-        love.graphics.draw(love.graphics.newText( font , 'FOREST') , optionBox_1.box.x , optionBox_1.box.y )
+        love.graphics.draw(love.graphics.newText( font , 'FOREST') , optionBox[1].box.x , optionBox[1].box.y )
     end
 end
 
 function atMenu( x , y , button , istouch )
     if button == 1 then
-        if inBox( x , y , optionBox_1.box) then -- continue
-            loadGame()
+        if inBox( x , y , optionBox[1].box) then -- continue
             menu = false
             farm = true
-        elseif inBox( x , y , optionBox_2.box) then -- new game
+        elseif inBox( x , y , optionBox[2].box) then -- new game
             time = 0
             menu = false
             farm = true
@@ -121,13 +137,17 @@ end
 
 function atFarm( x , y , button , istouch )
     if button == 1 then
-        if inBox(x,y,optionBox_4.box) then
+        if inBox(x,y,optionBox[4].box) then
             farm = false
             adventure = true
-        elseif inBox(x,y,petBox_1.box) then
-            local tmp = petBox_1.pet
-            petBox_1.pet = mainPetBox.pet
-            mainPetBox.pet = tmp
+        end
+        for i = 1 , #petBox do
+            if inBox(x,y,petBox[i].box) then
+                local tmp = petBox[i].pet
+                petBox[i].pet = mainPetBox.pet
+                mainPetBox.pet = tmp
+                tmp = nil
+            end
         end
     end
 end
@@ -135,7 +155,7 @@ end
 --TODO
 function atAdventure( x , y , button , istouch )
     if button == 1 then
-        if inBox(x,y,optionBox_1.box) then
+        if inBox(x,y,optionBox[1].box) then
             adventure = false
             farm = true
         end
