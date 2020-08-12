@@ -1,7 +1,5 @@
 --[[
     Tamagotchi by nasa
-
-    TODO
     
     FARM
     
@@ -45,15 +43,21 @@ function love.load()
     optionBox[3] = {box = {x = 9*12 , y = 16*28 , w = 140 , h = 40}}
     optionBox[4] = {box = {x = 9*12 , y = 16*32 , w = 140 , h = 40}}
     optionBox[5] = {box = {x = 9*12 , y = 16*36 , w = 140 , h = 40}}
-
+    healthFood = setmetatable( Items.HealthFood , Items.Ideal )
     player = {
         coins = 10,
         gems = 1,
-        rank = 'Copper'
+        rank = 'Copper',
+        inventory = {
+            healthFood:new(),healthFood:new(),healthFood:new(),
+            healthFood:new(),healthFood:new(),healthFood:new()
+        }
     }
     pet1 = {
         name = 'Jer',
+        health = 5,
         strength = 1,
+        speed = 1,
         stamina = 5,
         carisma = 0,
         img = love.graphics.newImage( "images/pet1.png" ),
@@ -61,7 +65,9 @@ function love.load()
     }
     pet2 = {
         name = 'Bel',
+        health = 5,
         strength = 1,
+        speed = 1,
         stamina = 5,
         carisma = 0,
         img = love.graphics.newImage( "images/pet2.png" ),
@@ -69,7 +75,9 @@ function love.load()
     }
     pet3 = {
         name = 'Guz',
+        health = 5,
         strength = 1,
+        speed = 1,
         stamina = 5,
         carisma = 0,
         img = love.graphics.newImage( "images/pet3.png" ),
@@ -82,6 +90,15 @@ function love.load()
     {pet = pet2 , box = {x = 9*2 , y = 16*8 , w = 50 , h = 50}},
     {pet = pet3 , box = {x = 9*2 , y = 16*13 , w = 50 , h = 50}},
     {box = {x = 9*2 , y = 16*17 , w = 50 , h = 50}}
+    }
+
+    inventoryBox = {
+        {box = {x = 9*2 , y = 16*22, w = 50 , h = 50}},
+        {box = {x = 9*9 , y = 16*22, w = 50 , h = 50}},
+        {box = {x = 9*16 , y = 16*22, w = 50 , h = 50}},
+        {box = {x = 9*2 , y = 16*26, w = 50 , h = 50}},
+        {box = {x = 9*9 , y = 16*26, w = 50 , h = 50}},
+        {box = {x = 9*16 , y = 16*26, w = 50 , h = 50}}
     }
 
     selectionBox = {
@@ -128,6 +145,14 @@ function drawPetBox(x,y)
     end
 end
 
+function drawInventoryBox(x,y)
+    for i = 1 , #inventoryBox do
+        if player.inventory[i] then
+            love.graphics.draw( player.inventory[i].img , inventoryBox[i].box.x , inventoryBox[i].box.y )
+        end
+    end
+end
+
 function love.update(dt)
     saveGame()
     time = time + 1/60
@@ -154,9 +179,12 @@ function love.draw()
         love.graphics.print('Coins: '..player.coins , 9*12 , 0)
         love.graphics.print('Gems: '..player.gems , 9*20 , 0)
         love.graphics.print('Rank: '..player.rank , 9*28 , 0)
+        drawInventoryBox(9*12,16*18)
         love.graphics.draw( mainPetBox.pet.img , mainPetBox.box.x , mainPetBox.box.y )
         drawPetBox(0,0)
         love.graphics.draw(love.graphics.newText( font , '> ADVENTURE' ) , optionBox[4].box.x , optionBox[4].box.y )
+        love.graphics.draw(love.graphics.newText( font , '> SHOP' ) , optionBox[5].box.x , optionBox[5].box.y )
+
 
     elseif atDungeonSelectionScreen then
 
@@ -186,11 +214,14 @@ function love.draw()
             if explorerBox[i].pet then
                 love.graphics.draw(love.graphics.newText( miniFont , explorerBox[i].pet.name ) , explorerBox[i].box.x -9*2, explorerBox[i].box.y - 16)
                 love.graphics.draw(explorerBox[i].pet.miniImg , explorerBox[i].box.x -9*4 , explorerBox[i].box.y )
+                love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..explorerBox[i].pet.health ) , explorerBox[i].box.x -9*3, explorerBox[i].box.y + 16*4)
+
             end
         end
         if enemyBox.pet then
             love.graphics.draw(love.graphics.newText( miniFont , enemyBox.pet.name ) , enemyBox[1].box.x + 9*8 , enemyBox[1].box.y )
             love.graphics.draw(enemyBox.pet.img , enemyBox[1].box.x , enemyBox[1].box.y )
+            love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..enemyBox.pet.health ) , enemyBox[1].box.x + 9*7 , enemyBox[1].box.y + 16*8 )
         end
     end
 end
@@ -267,6 +298,10 @@ function teamSelectionScreen( x , y , button , istouch )
     end
 end
 
+function combat( petsTable , enemiesTable )
+-- TODO
+end
+
 function ForestScreen()
     enemyBox.pet = Adventure.Dungeons.Forest.enemies[1]
 end
@@ -331,7 +366,7 @@ end
 -- guarda o horário e a data
 -- usa pra calcular quanto tempo o player ficou sem jogar
 function love.quit()
-    --[[TODO 
+    --[[
         quando player fechar a janela, guarda o horário e a data pra calcular o tempo
 
         os.time() => 1476852730 -- seconds since epoch
