@@ -16,7 +16,6 @@ local Equip = require('Equip')
 local Monsters = require('Monsters')
 local Adventure = require('Adventure')
 
-
 -- checa se o player clicou dentro do objeto
 function inBox( x , y , obj )
     if x >= obj.x and x <= obj.x + obj.w and y >= obj.y and y <= obj.y + obj.h then
@@ -24,14 +23,10 @@ function inBox( x , y , obj )
     end
 end
 
-
 function love.load()
     font = love.graphics.newFont(24)
     miniFont = love.graphics.newFont(16)
     if not time then time = 0 end
-    animationCounter = 0
-    hungerCounter = 0
-    boredomCounter = 0
     screenSize = love.window.setMode( 9*40 , 16*40 )
     backgroundColor = {189/255 , 195/255 , 199/255} -- lilás bem claro
     love.graphics.setBackgroundColor( backgroundColor )
@@ -61,7 +56,8 @@ function love.load()
         stamina = 5,
         carisma = 0,
         img = love.graphics.newImage( "images/pet1.png" ),
-        miniImg = love.graphics.newImage( 'images/pet1mini.png')
+        miniImg = love.graphics.newImage( 'images/pet1mini.png'),
+        animationBox = {dmg,x,y}
     }
     pet2 = {
         name = 'Bel',
@@ -71,7 +67,8 @@ function love.load()
         stamina = 5,
         carisma = 0,
         img = love.graphics.newImage( "images/pet2.png" ),
-        miniImg = love.graphics.newImage( 'images/pet2mini.png')
+        miniImg = love.graphics.newImage( 'images/pet2mini.png'),
+        animationBox = {dmg,x,y}
     }
     pet3 = {
         name = 'Guz',
@@ -81,7 +78,8 @@ function love.load()
         stamina = 5,
         carisma = 0,
         img = love.graphics.newImage( "images/pet3.png" ),
-        miniImg = love.graphics.newImage( 'images/pet3mini.png')
+        miniImg = love.graphics.newImage( 'images/pet3mini.png'),
+        animationBox = {dmg,x,y}
     }
 
     mainPetBox = {pet = pet1 , box = {x = 9*12 , y = 16*4 }}
@@ -125,6 +123,10 @@ function love.load()
         {box = {x = 9*22 , y = 16*28, w = 50 , h = 50}},
     }
 
+    animationCounter = 0
+
+    animationStack = {}
+
     screen = 'menu'
 
     loadGame()
@@ -155,8 +157,12 @@ end
 function love.update(dt)
     saveGame()
     time = time + 1/60
-    if atForest then
-        
+    animationCounter = animationCounter + dt
+    if animationCounter > 3 then
+        animationCounter = 0
+    end
+    if animationStack[1] then
+        animationStack[1].animationBox.y = animationStack[1].animationBox.y -1
     end
 end
 
@@ -210,7 +216,6 @@ function drawForest()
             love.graphics.draw(love.graphics.newText( miniFont , explorerBox[i].pet.name ) , explorerBox[i].box.x -9*2, explorerBox[i].box.y - 16)
             love.graphics.draw(explorerBox[i].pet.miniImg , explorerBox[i].box.x -9*4 , explorerBox[i].box.y )
             love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..explorerBox[i].pet.health ) , explorerBox[i].box.x -9*3, explorerBox[i].box.y + 16*4)
-
         end
     end
     if enemyBox.pet then
@@ -218,9 +223,15 @@ function drawForest()
         love.graphics.draw(enemyBox.pet.img , enemyBox[1].box.x , enemyBox[1].box.y )
         love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..enemyBox.pet.health ) , enemyBox[1].box.x + 9*7 , enemyBox[1].box.y + 16*8 )
     end
-    if combat then
-        love.graphics.draw( love.graphics.newText(font,'COMBAT') , 100 , 100 )
+    if animationStack[1] then
+        love.graphics.draw( love.graphics.newText( miniFont , animationStack[1].animationBox.dmg ) , animationStack[1].animationBox.x , animationStack[1].animationBox.y )
     end
+end
+
+function attack( attacker , target )
+    target.health = target.health - attacker.strength
+    target.animationBox.dmg = attacker.strength
+    animationStack[1] = target
 end
 
 function love.draw()
@@ -312,19 +323,15 @@ function teamSelectionScreen( x , y , button , istouch )
     end
 end
 
-function combat( petsTable , enemiesTable )
--- TODO
-
-    return combat
-end
-
 function ForestScreen( x , y , button , istouch )
     enemyBox.enemy = Adventure.Dungeons.Forest.enemies[1]
     local petsTable = {}
     for i = 1 , #explorerBox do
         petsTable[i] = explorerBox[i]
+        petsTable[i].animationBox.x = explorerBox[i].box.x
+        petsTable[i].animationBox.y = explorerBox[i].box.y
     end
-    combat( petsTable , {enemyBox.enemy})
+    attack(petsTable[1],enemyBox.enemy)
 end
 
 function love.mousepressed( x , y , button , istouch )
