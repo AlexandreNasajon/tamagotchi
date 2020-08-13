@@ -16,6 +16,8 @@ local Equip = require('Equip')
 local Monsters = require('Monsters')
 local Adventure = require('Adventure')
 
+
+
 -- checa se o player clicou dentro do objeto
 function inBox( x , y , obj )
     if x >= obj.x and x <= obj.x + obj.w and y >= obj.y and y <= obj.y + obj.h then
@@ -48,39 +50,13 @@ function love.load()
             healthFood:new(),healthFood:new(),healthFood:new()
         }
     }
-    pet1 = {
-        name = 'Jer',
-        health = 5,
-        strength = 1,
-        speed = 1,
-        stamina = 5,
-        carisma = 0,
-        img = love.graphics.newImage( "images/pet1.png" ),
-        miniImg = love.graphics.newImage( 'images/pet1mini.png'),
-        animationBox = {dmg,x,y}
-    }
-    pet2 = {
-        name = 'Bel',
-        health = 5,
-        strength = 1,
-        speed = 1,
-        stamina = 5,
-        carisma = 0,
-        img = love.graphics.newImage( "images/pet2.png" ),
-        miniImg = love.graphics.newImage( 'images/pet2mini.png'),
-        animationBox = {dmg,x,y}
-    }
-    pet3 = {
-        name = 'Guz',
-        health = 5,
-        strength = 1,
-        speed = 1,
-        stamina = 5,
-        carisma = 0,
-        img = love.graphics.newImage( "images/pet3.png" ),
-        miniImg = love.graphics.newImage( 'images/pet3mini.png'),
-        animationBox = {dmg,x,y}
-    }
+
+    setmetatable( Monsters.Jer , Monsters.Ideal )
+    setmetatable( Monsters.Bel , Monsters.Ideal )
+    setmetatable( Monsters.Guz , Monsters.Ideal )
+    pet1 = Monsters.Jer:new()
+    pet2 = Monsters.Bel:new()
+    pet3 = Monsters.Guz:new()
 
     mainPetBox = {pet = pet1 , box = {x = 9*12 , y = 16*4 }}
 
@@ -124,9 +100,7 @@ function love.load()
     }
 
     animationCounter = 0
-
-    animationStack = {}
-
+    
     screen = 'menu'
 
     loadGame()
@@ -157,13 +131,23 @@ end
 function love.update(dt)
     saveGame()
     time = time + 1/60
-    animationCounter = animationCounter + dt
-    if animationCounter > 3 then
-        animationCounter = 0
+
+    if enemyBox.pet then
+        if enemyBox.pet.animationBox.y > 16*24 then
+            enemyBox.pet.animationBox.y = enemyBox.pet.animationBox.y -1
+        else
+            enemyBox.pet.animationBox.y = -100
+        end
     end
-    if animationStack[1] then
-        animationStack[1].animationBox.y = animationStack[1].animationBox.y -1
+
+    if explorerBox[1].pet then
+        if explorerBox[1].pet.animationBox.y > 16*24 then
+            explorerBox[1].pet.animationBox.y = explorerBox[1].pet.animationBox.y -1
+        else
+            explorerBox[1].pet.animationBox.y = -100
+        end
     end
+
 end
 
 --[[
@@ -212,26 +196,50 @@ function drawForest()
     love.graphics.draw(love.graphics.newText( font , 'FOREST' ) , titleBox.box.x , titleBox.box.y  )
     love.graphics.draw( Adventure.Dungeons.Forest.img , -9*4 , 16*4 )
     for i = 1 , #explorerBox do
-        if explorerBox[i].pet then
+        if explorerBox[i].pet and explorerBox[i].pet.health > 0 then
             love.graphics.draw(love.graphics.newText( miniFont , explorerBox[i].pet.name ) , explorerBox[i].box.x -9*2, explorerBox[i].box.y - 16)
             love.graphics.draw(explorerBox[i].pet.miniImg , explorerBox[i].box.x -9*4 , explorerBox[i].box.y )
             love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..explorerBox[i].pet.health ) , explorerBox[i].box.x -9*3, explorerBox[i].box.y + 16*4)
         end
     end
-    if enemyBox.pet then
+    if enemyBox.pet.health > 0 then
         love.graphics.draw(love.graphics.newText( miniFont , enemyBox.pet.name ) , enemyBox[1].box.x + 9*8 , enemyBox[1].box.y )
         love.graphics.draw(enemyBox.pet.img , enemyBox[1].box.x , enemyBox[1].box.y )
         love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..enemyBox.pet.health ) , enemyBox[1].box.x + 9*7 , enemyBox[1].box.y + 16*8 )
     end
-    if animationStack[1] then
-        love.graphics.draw( love.graphics.newText( miniFont , animationStack[1].animationBox.dmg ) , animationStack[1].animationBox.x , animationStack[1].animationBox.y )
-    end
+    
+    -- Por que não precisa de condicional??? Só desenha quando clico na tela
+    love.graphics.draw( love.graphics.newText( font , enemyBox.pet.animationBox.dmg ) , enemyBox.pet.animationBox.x , enemyBox.pet.animationBox.y )
+    love.graphics.draw( love.graphics.newText( font , explorerBox[1].pet.animationBox.dmg ) , explorerBox[1].pet.animationBox.x , explorerBox[1].pet.animationBox.y )
 end
 
-function attack( attacker , target )
-    target.health = target.health - attacker.strength
-    target.animationBox.dmg = attacker.strength
-    animationStack[1] = target
+function ForestScreen()
+    -- combate
+    -- cada click passa pro próximo turno
+
+    -- tira os bichos da box de seleção do time pra não bugar quando for selecionar de novo
+    for i = 1 , #teamBox do
+        teamBox[i].pet = nil
+    end
+
+    if enemyBox.pet.health > 0 then
+        enemyBox.pet.health = enemyBox.pet.health - explorerBox[1].pet.strength
+        enemyBox.pet.animationBox.dmg = - explorerBox[1].pet.strength
+        enemyBox.pet.animationBox.x = enemyBox[1].box.x + 9*7
+        enemyBox.pet.animationBox.y = enemyBox[1].box.y
+    else
+        screen = 'farm'
+    end
+        
+    if explorerBox[1].pet.health > 0 then
+        explorerBox[1].pet.health = explorerBox[1].pet.health - enemyBox.pet.strength
+        explorerBox[1].pet.animationBox.dmg = - enemyBox.pet.strength
+        explorerBox[1].pet.animationBox.x = explorerBox[1].box.x - 9*2
+        explorerBox[1].pet.animationBox.y = explorerBox[1].box.y - 16
+    else
+        screen = 'farm'
+    end
+
 end
 
 function love.draw()
@@ -240,10 +248,8 @@ function love.draw()
     elseif screen == 'farm' then
         drawFarm()
     elseif screen == 'dungeon selection' then
-
         love.graphics.draw(love.graphics.newText( font , 'ADVENTURE' ) , titleBox.box.x , titleBox.box.y  )
         love.graphics.draw(love.graphics.newText( font , '> FOREST') , optionBox[1].box.x , optionBox[1].box.y )
-
     elseif screen == 'team selection' then
         drawTeamSelection()
     elseif screen == 'forest' then
@@ -323,16 +329,6 @@ function teamSelectionScreen( x , y , button , istouch )
     end
 end
 
-function ForestScreen( x , y , button , istouch )
-    enemyBox.enemy = Adventure.Dungeons.Forest.enemies[1]
-    local petsTable = {}
-    for i = 1 , #explorerBox do
-        petsTable[i] = explorerBox[i]
-        petsTable[i].animationBox.x = explorerBox[i].box.x
-        petsTable[i].animationBox.y = explorerBox[i].box.y
-    end
-    attack(petsTable[1],enemyBox.enemy)
-end
 
 function love.mousepressed( x , y , button , istouch )
     if screen == 'menu' then
@@ -344,7 +340,7 @@ function love.mousepressed( x , y , button , istouch )
     elseif screen == 'team selection' then
         teamSelectionScreen( x , y , button , istouch )
     elseif screen == 'forest' then
-        ForestScreen( x , y , button , istouch )
+        ForestScreen() -- tirar do mousepressed
     end
 end
 
