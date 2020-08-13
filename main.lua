@@ -61,8 +61,8 @@ function love.load()
     mainPetBox = {pet = pet1 , box = {x = 9*12 , y = 16*4 }}
 
     farmBox = {
-    {pet = pet2 , box = {x = 9*2 , y = 16*8 , w = 50 , h = 50}},
-    {pet = pet3 , box = {x = 9*2 , y = 16*13 , w = 50 , h = 50}},
+    {pet = pet2 , box = {x = 9*30 , y = 16*5 , w = 50 , h = 50}},
+    {pet = pet3 , box = {x = 9*30 , y = 16*10 , w = 50 , h = 50}},
     {box = {x = 9*2 , y = 16*17 , w = 50 , h = 50}}
     }
 
@@ -164,9 +164,12 @@ function drawFarm()
     love.graphics.draw(love.graphics.newText( font , '     FARM' ) , titleBox.box.x , titleBox.box.y  )
     love.graphics.print(math.floor(time))
     love.graphics.print('Creature: '..mainPetBox.pet.name , 0 , 16)
-    love.graphics.print('Strength: '..mainPetBox.pet.strength , 0 , 16*2)
-    love.graphics.print('Stamina: '..mainPetBox.pet.stamina , 0 , 16*3)
-    love.graphics.print('Carisma: '..mainPetBox.pet.carisma , 0 , 16*4)
+    love.graphics.print('Health: '..mainPetBox.pet.health , 0 , 16*2)
+    love.graphics.print('Strength: '..mainPetBox.pet.strength , 0 , 16*3)
+    love.graphics.print('Speed: '..mainPetBox.pet.speed , 0 , 16*4)
+    love.graphics.print('Carisma: '..mainPetBox.pet.carisma , 0 , 16*5)
+    love.graphics.print('Intelect: '..mainPetBox.pet.intelect , 0 , 16*6)
+    love.graphics.print('Stamina: '..mainPetBox.pet.stamina , 0 , 16*7)
     love.graphics.print('Coins: '..player.coins , 9*12 , 0)
     love.graphics.print('Gems: '..player.gems , 9*20 , 0)
     love.graphics.print('Rank: '..player.rank , 9*28 , 0)
@@ -200,17 +203,17 @@ function drawForest()
             love.graphics.draw(love.graphics.newText( miniFont , explorerBox[i].pet.name ) , explorerBox[i].box.x -9*2, explorerBox[i].box.y - 16)
             love.graphics.draw(explorerBox[i].pet.miniImg , explorerBox[i].box.x -9*4 , explorerBox[i].box.y )
             love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..explorerBox[i].pet.health ) , explorerBox[i].box.x -9*3, explorerBox[i].box.y + 16*4)
+            love.graphics.draw( love.graphics.newText( font , explorerBox[i].pet.animationBox.dmg ) , explorerBox[i].pet.animationBox.x , explorerBox[i].pet.animationBox.y )
         end
     end
     if enemyBox.pet.health > 0 then
         love.graphics.draw(love.graphics.newText( miniFont , enemyBox.pet.name ) , enemyBox[1].box.x + 9*8 , enemyBox[1].box.y )
         love.graphics.draw(enemyBox.pet.img , enemyBox[1].box.x , enemyBox[1].box.y )
         love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..enemyBox.pet.health ) , enemyBox[1].box.x + 9*7 , enemyBox[1].box.y + 16*8 )
+        love.graphics.draw( love.graphics.newText( font , enemyBox.pet.animationBox.dmg ) , enemyBox.pet.animationBox.x , enemyBox.pet.animationBox.y )
     end
     
     -- Por que não precisa de condicional??? Só desenha quando clico na tela
-    love.graphics.draw( love.graphics.newText( font , enemyBox.pet.animationBox.dmg ) , enemyBox.pet.animationBox.x , enemyBox.pet.animationBox.y )
-    love.graphics.draw( love.graphics.newText( font , explorerBox[1].pet.animationBox.dmg ) , explorerBox[1].pet.animationBox.x , explorerBox[1].pet.animationBox.y )
 end
 
 function ForestScreen()
@@ -228,15 +231,37 @@ function ForestScreen()
         enemyBox.pet.animationBox.x = enemyBox[1].box.x + 9*7
         enemyBox.pet.animationBox.y = enemyBox[1].box.y
     else
+        enemyBox.pet.health = enemyBox.pet.maxHealth
+        mainPetBox.pet.health = mainPetBox.pet.maxHealth
+        for i = 1 , 3 do if farmBox[i].pet then farmBox[i].pet.health = farmBox[i].pet.maxHealth end end
+        for i = 1 , 3 do explorerBox[i].pet = nil end
         screen = 'farm'
     end
         
-    if explorerBox[1].pet.health > 0 then
+    if explorerBox[1].pet and explorerBox[1].pet.health > 0 then
         explorerBox[1].pet.health = explorerBox[1].pet.health - enemyBox.pet.strength
         explorerBox[1].pet.animationBox.dmg = - enemyBox.pet.strength
         explorerBox[1].pet.animationBox.x = explorerBox[1].box.x - 9*2
         explorerBox[1].pet.animationBox.y = explorerBox[1].box.y - 16
+    elseif explorerBox[2].pet then
+        if explorerBox[2].pet.health > 0 then
+            explorerBox[1].pet = explorerBox[2].pet
+            explorerBox[1].pet.health = explorerBox[1].pet.health - enemyBox.pet.strength
+            explorerBox[1].pet.animationBox.dmg = - enemyBox.pet.strength
+            explorerBox[1].pet.animationBox.x = explorerBox[1].box.x - 9*2
+            explorerBox[1].pet.animationBox.y = explorerBox[1].box.y - 16
+            if explorerBox[3].pet then 
+                explorerBox[2].pet = explorerBox[3].pet
+                explorerBox[3].pet = nil
+            else
+                explorerBox[2].pet = nil
+            end
+        end 
     else
+        enemyBox.pet.health = enemyBox.pet.maxHealth
+        mainPetBox.pet.health = mainPetBox.pet.maxHealth
+        for i = 1 , 3 do if farmBox[i].pet then farmBox[i].pet.health = farmBox[i].pet.maxHealth end end
+        for i = 1 , 3 do explorerBox[i].pet = nil end
         screen = 'farm'
     end
 
