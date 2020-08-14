@@ -1,12 +1,6 @@
 --[[
     Tamagotchi by nasa
-    
-    FARM
-    
-    ADVENTURE
-    - mandar bicho em aventura
-    - encontrar inimigos
-    - lutar contra inimigo
+   
     - recrutar inimigo
 ]]
 
@@ -17,6 +11,31 @@ local Monsters = require('Monsters')
 local Adventure = require('Adventure')
 local Shop = require('Shop')
 
+function find( where ,what )
+    for k,v in pairs(where) do
+        if v == what then
+        return k
+        end
+    end
+end
+
+function move( what , origin , destiny )
+    destiny[#destiny+1] = what
+    local j = find( origin , what )
+    if j then
+        while j <= #origin do
+            origin[j] = origin[j+1]
+            j = j+1
+        end
+    else print('J is NIL') -- debugger
+    end
+end
+
+function eliminate( what , where )
+    local pit = {}
+    move( what , where , pit)
+    pit = nil
+end
 
 
 -- checa se o player clicou dentro do objeto
@@ -28,56 +47,54 @@ end
 
 function love.load()
     font = love.graphics.newFont(24)
-    miniFont = love.graphics.newFont(16)
+    miniFont = love.graphics.newFont(14)
     if not time then time = 0 end
     screenSize = love.window.setMode( 9*40 , 16*40 )
     backgroundColor = {189/255 , 195/255 , 199/255} -- lilás bem claro
     love.graphics.setBackgroundColor( backgroundColor )
     love.graphics.setColor( 0 , 0 , 0 )
+
     titleBox = {box = {x = 9*12 , y = 16}}
+
     optionBox = {}
     optionBox[1] = {box = {x = 9*12 , y = 16*20 , w = 140 , h = 40}}
     optionBox[2] = {box = {x = 9*12 , y = 16*24 , w = 140 , h = 40}}
     optionBox[3] = {box = {x = 9*12 , y = 16*28 , w = 140 , h = 40}}
     optionBox[4] = {box = {x = 9*12 , y = 16*32 , w = 140 , h = 40}}
     optionBox[5] = {box = {x = 9*12 , y = 16*36 , w = 140 , h = 40}}
-    healthFood = setmetatable( Items.HealthFood , Items.Ideal )
+
+
     player = {
         coins = 10,
-        gems = 1,
+        gems = 0,
         rank = 'Copper',
-        inventory = {
-            healthFood:new()
+        inventory = {},
+        pets = {
+            Monsters.Jer:new(),
+            Monsters.Bel:new(),
+            Monsters.Guz:new(),
+            Monsters.Jer:new()
         }
     }
 
-    setmetatable( Monsters.Jer , Monsters.Ideal )
-    setmetatable( Monsters.Bel , Monsters.Ideal )
-    setmetatable( Monsters.Guz , Monsters.Ideal )
-    pet1 = Monsters.Jer:new()
-    pet2 = Monsters.Bel:new()
-    pet3 = Monsters.Guz:new()
-
-    mainPetBox = {pet = pet1 , box = {x = 9*12 , y = 16*4 }}
+    mainPetBox = {pet = player.pets[1] , box = {x = 9*12 , y = 16*4 }}
 
     farmBox = {
-    {pet = pet2 , box = {x = 9*30 , y = 16*5 , w = 50 , h = 50}},
-    {pet = pet3 , box = {x = 9*30 , y = 16*10 , w = 50 , h = 50}},
-    {box = {x = 9*2 , y = 16*17 , w = 50 , h = 50}}
+    {pet = player.pets[2] , box = {x = 9*30 , y = 16*5 , w = 50 , h = 50}},
+    {pet = player.pets[3] , box = {x = 9*30 , y = 16*10 , w = 50 , h = 50}},
+    {pet = player.pets[4] , box = {x = 9*30 , y = 16*17 , w = 50 , h = 50}}
     }
 
     inventoryBox = {
         {box = {x = 9*2 , y = 16*15, w = 50 , h = 50}},
-        {box = {x = 9*9 , y = 16*15, w = 50 , h = 50}},
-        {box = {x = 9*16 , y = 16*15, w = 50 , h = 50}},
-        {box = {x = 9*23 , y = 16*15, w = 50 , h = 50}},
-        {box = {x = 9*30 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*12 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*22 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*32 , y = 16*15, w = 50 , h = 50}},
         
-        {box = {x = 9*2 , y = 16*19, w = 50 , h = 50}},
-        {box = {x = 9*9 , y = 16*19, w = 50 , h = 50}},
-        {box = {x = 9*16 , y = 16*19, w = 50 , h = 50}},
-        {box = {x = 9*23 , y = 16*19, w = 50 , h = 50}},
-        {box = {x = 9*30 , y = 16*19, w = 50 , h = 50}},
+        {box = {x = 9*2 , y = 16*20, w = 50 , h = 50}},
+        {box = {x = 9*12 , y = 16*20, w = 50 , h = 50}},
+        {box = {x = 9*22 , y = 16*20, w = 50 , h = 50}},
+        {box = {x = 9*32 , y = 16*20, w = 50 , h = 50}},
 
     }
 
@@ -119,10 +136,8 @@ function love.load()
 
 end
 
-
-
 function love.update(dt)
-    saveGame()
+    --saveGame()
     time = time + 1/60
 
     if enemyBox.pet then
@@ -161,23 +176,24 @@ function MenuScreen( x , y , button , istouch )
 end
 
 function drawMainPetBox(x,y)
-    love.graphics.draw( mainPetBox.pet.miniImg , x , y )
-    love.graphics.draw( love.graphics.newText(miniFont,mainPetBox.pet.name) , 9*2 + x , y - 16 )
+    love.graphics.draw( player.pets[1].miniImg , x , y )
+    love.graphics.draw( love.graphics.newText(miniFont,player.pets[1].name) , 9*2 + x , y - 16 )
 end
 
 function drawPetBox(x,y)
-    for i = 1 , #farmBox do
-        if farmBox[i].pet then 
-            love.graphics.draw( farmBox[i].pet.miniImg , farmBox[i].box.x + x , farmBox[i].box.y + y)
-            love.graphics.draw( love.graphics.newText(miniFont,farmBox[i].pet.name) , farmBox[i].box.x + 9*2 + x , farmBox[i].box.y - 16 + y )
+    for i = 2 , #player.pets do
+        if player.pets[i] then 
+            love.graphics.draw( farmBox[i-1].pet.miniImg , farmBox[i-1].box.x + x , farmBox[i-1].box.y + y)
+            love.graphics.draw( love.graphics.newText(miniFont,player.pets.name) , farmBox[i-1].box.x + 9*2 + x , farmBox[i-1].box.y - 16 + y )
         end
     end
 end
 
 function drawInventoryBox(x,y)
-    for i = 1 , #inventoryBox do
+    for i = 1 , #player.inventory do
         if player.inventory[i] then
             love.graphics.draw( player.inventory[i].img , inventoryBox[i].box.x , inventoryBox[i].box.y )
+            love.graphics.draw( love.graphics.newText(miniFont,player.inventory[i].name) , inventoryBox[i].box.x -9, inventoryBox[i].box.y - 16)
         end
     end
 end
@@ -211,10 +227,16 @@ function FarmScreen( x , y , button , istouch )
         end
         for i = 1 , #farmBox do
             if inBox(x,y,farmBox[i].box) then
-                local tmp = farmBox[i].pet
-                farmBox[i].pet = mainPetBox.pet
-                mainPetBox.pet = tmp
+                local tmp = mainPetBox.pet
+                mainPetBox.pet = farmBox[i].pet
+                farmBox[i].pet = tmp
                 tmp = nil
+            end
+        end
+        for i = 1 , #player.inventory do
+            if inBox(x,y,inventoryBox[i].box) then
+                player.inventory[i].effect(mainPetBox.pet)
+                eliminate(player.inventory[i],player.inventory)
             end
         end
     end
@@ -313,8 +335,8 @@ function ForestScreen()
         enemyBox.pet.animationBox.y = enemyBox[1].box.y
     else
         enemyBox.pet.health = enemyBox.pet.maxHealth
-        mainPetBox.pet.health = mainPetBox.pet.maxHealth
-        for i = 1 , 3 do if farmBox[i].pet then farmBox[i].pet.health = farmBox[i].pet.maxHealth end end
+        player.pets[1].health = player.pets[1].maxHealth
+        for i = 1 , #player.pets do if player.pets[i] then player.pets[i].health = player.pets[i].maxHealth end end
         for i = 1 , 3 do explorerBox[i].pet = nil end
         screen = 'farm'
     end
@@ -340,8 +362,7 @@ function ForestScreen()
         end 
     else
         enemyBox.pet.health = enemyBox.pet.maxHealth
-        mainPetBox.pet.health = mainPetBox.pet.maxHealth
-        for i = 1 , 3 do if farmBox[i].pet then farmBox[i].pet.health = farmBox[i].pet.maxHealth end end
+        for i = 1 , #player.pets do if player.pets[i] then player.pets[i].health = player.pets[i].maxHealth end end
         for i = 1 , 3 do explorerBox[i].pet = nil end
         screen = 'farm'
     end
@@ -368,9 +389,9 @@ function ShopScreen( x , y , button , istouch )
         end
         for i = 1 , 4 do
             if inBox(x,y,shopBox[i].box) then
-                if player.coins >= shopBox[i][1].cost and #player.inventory < 10 then
+                if player.coins >= shopBox[i][1].cost and #player.inventory < 8 then
                     player.coins = player.coins - shopBox[i][1].cost
-                    player.inventory[#player.inventory +1] = shopBox[1][1]
+                    player.inventory[#player.inventory +1] = shopBox[i][1]
                 end
             end
         end
@@ -428,10 +449,10 @@ end
 
 -- pega as informações no arquivo e coloca nas variáveis correspondentes
 function loadGame()
-    pet1.name = fileLine(1,'file.txt')
-    pet1.strength = tonumber(fileLine(2,'file.txt'))
-    pet1.stamina = tonumber(fileLine(3,'file.txt'))
-    pet1.carisma = tonumber(fileLine(4,'file.txt'))
+    player.pets[1].name = fileLine(1,'file.txt')
+    player.pets[1].strength = tonumber(fileLine(2,'file.txt'))
+    player.pets[1].stamina = tonumber(fileLine(3,'file.txt'))
+    player.pets[1].carisma = tonumber(fileLine(4,'file.txt'))
     time = tonumber(fileLine(5,'file.txt'))
     player.coins = tonumber(fileLine(6,'file.txt'))
     player.gems = tonumber(fileLine(7,'file.txt')) 
@@ -441,10 +462,10 @@ end
 -- substitui cada linha do arquivo pelo que estiver nas variáveis do pet
 function saveGame()
     local file = io.open('file.txt','w')
-    file:write(pet1.name, "\n")
-    file:write(pet1.strength, "\n")
-    file:write(pet1.stamina, "\n")
-    file:write(pet1.carisma, "\n")
+    file:write(player.pets[1].name, "\n")
+    file:write(player.pets[1].strength, "\n")
+    file:write(player.pets[1].stamina, "\n")
+    file:write(player.pets[1].carisma, "\n")
     file:write(time,"\n")
     file:write(player.coins, "\n")
     file:write(player.gems, "\n")
