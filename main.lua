@@ -2,6 +2,7 @@
     Tamagotchi by nasa
    
     - recrutar inimigo
+    - recompensa de aventura
 ]]
 
 local Farm = require('Farm')
@@ -72,8 +73,7 @@ function love.load()
         pets = {
             Monsters.Jer:new(),
             Monsters.Bel:new(),
-            Monsters.Guz:new(),
-            Monsters.Jer:new()
+            Monsters.Guz:new()
         }
     }
 
@@ -82,7 +82,6 @@ function love.load()
     farmBox = {
     {pet = player.pets[2] , box = {x = 9*30 , y = 16*5 , w = 50 , h = 50}},
     {pet = player.pets[3] , box = {x = 9*30 , y = 16*10 , w = 50 , h = 50}},
-    {pet = player.pets[4] , box = {x = 9*30 , y = 16*17 , w = 50 , h = 50}}
     }
 
     inventoryBox = {
@@ -123,11 +122,12 @@ function love.load()
     }
 
     shopBox = {
+        {box = {x = 9*20 , y = 16*35 , w = 140 , h = 40}},
         {Shop.catalog[1] ,  box = {x = 9*4 , y = 16*8, w = 50 , h = 50}},
         {Shop.catalog[2] ,  box = {x = 9*4 , y = 16*14, w = 50 , h = 50}},
         {Shop.catalog[3] ,  box = {x = 9*4 , y = 16*20, w = 50 , h = 50}},
         {Shop.catalog[4] ,  box = {x = 9*4 , y = 16*26, w = 50 , h = 50}},
-        {box = {x = 9*8 , y = 16*32 , w = 140 , h = 40}}
+        {Shop.catalog[5] ,  box = {x = 9*4 , y = 16*32, w = 50 , h = 50}},
     }
 
     animationCounter = 0
@@ -176,15 +176,21 @@ function MenuScreen( x , y , button , istouch )
 end
 
 function drawMainPetBox(x,y)
-    love.graphics.draw( player.pets[1].miniImg , x , y )
-    love.graphics.draw( love.graphics.newText(miniFont,player.pets[1].name) , 9*2 + x , y - 16 )
+    love.graphics.draw( mainPetBox.pet.img , x , y )
+    love.graphics.draw( love.graphics.newText(miniFont,mainPetBox.pet.name) , 9*2 + x , y - 16 )
+    if mainPetBox.pet.equip then
+        love.graphics.draw( mainPetBox.pet.equipImg , x , y + 16*4 )
+    end
 end
 
 function drawPetBox(x,y)
-    for i = 2 , #player.pets do
-        if player.pets[i] then 
-            love.graphics.draw( farmBox[i-1].pet.miniImg , farmBox[i-1].box.x + x , farmBox[i-1].box.y + y)
-            love.graphics.draw( love.graphics.newText(miniFont,player.pets.name) , farmBox[i-1].box.x + 9*2 + x , farmBox[i-1].box.y - 16 + y )
+    for i = 1 , #farmBox do
+        if farmBox[i].pet then 
+            love.graphics.draw( farmBox[i].pet.miniImg , farmBox[i].box.x + x , farmBox[i].box.y + y)
+            love.graphics.draw( love.graphics.newText(miniFont,farmBox[i].pet.name) , farmBox[i].box.x + 9*2 + x , farmBox[i].box.y - 16 + y )
+            if farmBox[i].pet.equip then
+                love.graphics.draw( farmBox[i].pet.equipMiniImg , farmBox[i].box.x , farmBox[i].box.y + 16*2 )
+            end
         end
     end
 end
@@ -212,7 +218,7 @@ function drawFarm()
     love.graphics.print('Gems: '..player.gems , 9*20 , 0)
     love.graphics.print('Rank: '..player.rank , 9*28 , 0)
     drawInventoryBox(9*12,16*18)
-    love.graphics.draw( mainPetBox.pet.img , mainPetBox.box.x , mainPetBox.box.y )
+    drawMainPetBox( mainPetBox.box.x , mainPetBox.box.y )
     drawPetBox(0,0)
     love.graphics.draw(love.graphics.newText( font , '> ADVENTURE' ) , optionBox[2].box.x , optionBox[2].box.y )
     love.graphics.draw(love.graphics.newText( font , '> SHOP' ) , optionBox[3].box.x , optionBox[3].box.y )
@@ -235,8 +241,15 @@ function FarmScreen( x , y , button , istouch )
         end
         for i = 1 , #player.inventory do
             if inBox(x,y,inventoryBox[i].box) then
-                player.inventory[i].effect(mainPetBox.pet)
-                eliminate(player.inventory[i],player.inventory)
+                if player.inventory[i].effect then
+                    player.inventory[i].effect(mainPetBox.pet)
+                    eliminate(player.inventory[i],player.inventory)
+                elseif player.inventory[i].attach then
+                    if mainPetBox.pet.equip == nil then
+                        player.inventory[i].attach(mainPetBox.pet)
+                        eliminate(player.inventory[i],player.inventory)
+                    end
+                end
             end
         end
     end
@@ -293,7 +306,6 @@ function dungeonSelectionScreen( x , y , button , istouch )
             selectionBox[1].pet = mainPetBox.pet
             if farmBox[1].pet then selectionBox[2].pet = farmBox[1].pet end
             if farmBox[2].pet then selectionBox[3].pet = farmBox[2].pet end 
-            if farmBox[3].pet then selectionBox[4].pet = farmBox[3].pet end
             screen = 'team selection'
         end
     end
@@ -373,21 +385,21 @@ function drawShop()
     love.graphics.print('Gems: '..player.gems , 9*20 , 0)
     love.graphics.print('Rank: '..player.rank , 9*28 , 0)
     love.graphics.draw(love.graphics.newText( font , 'SHOP' ) , titleBox.box.x , titleBox.box.y  )
-    for i = 1 , 4 do
+    for i = 2 , #shopBox do
         love.graphics.draw( love.graphics.newText( miniFont , shopBox[i][1].name) , shopBox[i].box.x , shopBox[i].box.y - 16)
         love.graphics.draw( shopBox[i][1].img , shopBox[i].box.x , shopBox[i].box.y )
         love.graphics.draw( love.graphics.newText( miniFont , 'Cost: '..shopBox[i][1].cost) , shopBox[i].box.x + 9*8 , shopBox[i].box.y + 16)
         love.graphics.draw( love.graphics.newText( miniFont , shopBox[i][1].text) , shopBox[i].box.x + 9*8 , shopBox[i].box.y + 16*2)
     end
-    love.graphics.draw(love.graphics.newText( font , '> FARM' ) , shopBox[5].box.x , shopBox[5].box.y  )
+    love.graphics.draw(love.graphics.newText( font , '> FARM' ) , shopBox[1].box.x , shopBox[1].box.y  )
 end
 
 function ShopScreen( x , y , button , istouch )
     if button == 1 then
-        if inBox(x,y,shopBox[5].box) then
+        if inBox(x,y,shopBox[1].box) then
             screen = 'farm'
         end
-        for i = 1 , 4 do
+        for i = 2 , #shopBox do
             if inBox(x,y,shopBox[i].box) then
                 if player.coins >= shopBox[i][1].cost and #player.inventory < 8 then
                     player.coins = player.coins - shopBox[i][1].cost
