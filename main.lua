@@ -15,6 +15,7 @@ local Items = require('Items')
 local Equip = require('Equip')
 local Monsters = require('Monsters')
 local Adventure = require('Adventure')
+local Shop = require('Shop')
 
 
 
@@ -46,8 +47,7 @@ function love.load()
         gems = 1,
         rank = 'Copper',
         inventory = {
-            healthFood:new(),healthFood:new(),healthFood:new(),
-            healthFood:new(),healthFood:new(),healthFood:new()
+            healthFood:new()
         }
     }
 
@@ -67,12 +67,18 @@ function love.load()
     }
 
     inventoryBox = {
-        {box = {x = 9*2 , y = 16*22, w = 50 , h = 50}},
-        {box = {x = 9*9 , y = 16*22, w = 50 , h = 50}},
-        {box = {x = 9*16 , y = 16*22, w = 50 , h = 50}},
-        {box = {x = 9*2 , y = 16*26, w = 50 , h = 50}},
-        {box = {x = 9*9 , y = 16*26, w = 50 , h = 50}},
-        {box = {x = 9*16 , y = 16*26, w = 50 , h = 50}}
+        {box = {x = 9*2 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*9 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*16 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*23 , y = 16*15, w = 50 , h = 50}},
+        {box = {x = 9*30 , y = 16*15, w = 50 , h = 50}},
+        
+        {box = {x = 9*2 , y = 16*19, w = 50 , h = 50}},
+        {box = {x = 9*9 , y = 16*19, w = 50 , h = 50}},
+        {box = {x = 9*16 , y = 16*19, w = 50 , h = 50}},
+        {box = {x = 9*23 , y = 16*19, w = 50 , h = 50}},
+        {box = {x = 9*30 , y = 16*19, w = 50 , h = 50}},
+
     }
 
     selectionBox = {
@@ -90,20 +96,68 @@ function love.load()
     }
 
     explorerBox = {
-        {box = {x = 9*4 , y = 16*32, w = 50 , h = 50}},
-        {box = {x = 9*10 , y = 16*32, w = 50 , h = 50}},
-        {box = {x = 9*18 , y = 16*32, w = 50 , h = 50}}
+        {box = {x = 9*18 , y = 16*22, w = 50 , h = 50}},
+        {box = {x = 9*12 , y = 16*24, w = 50 , h = 50}},
+        {box = {x = 9*26 , y = 16*24, w = 50 , h = 50}}
     }
 
     enemyBox = {
-        {box = {x = 9*22 , y = 16*28, w = 50 , h = 50}},
+        {box = {x = 9*10 , y = 16*6, w = 50 , h = 50}},
+    }
+
+    shopBox = {
+        {Shop.catalog[1] ,  box = {x = 9*4 , y = 16*8, w = 50 , h = 50}},
+        {Shop.catalog[2] ,  box = {x = 9*4 , y = 16*14, w = 50 , h = 50}},
+        {Shop.catalog[3] ,  box = {x = 9*4 , y = 16*20, w = 50 , h = 50}},
+        {Shop.catalog[4] ,  box = {x = 9*4 , y = 16*26, w = 50 , h = 50}},
+        {box = {x = 9*8 , y = 16*32 , w = 140 , h = 40}}
     }
 
     animationCounter = 0
     
     screen = 'menu'
 
-    loadGame()
+end
+
+
+
+function love.update(dt)
+    saveGame()
+    time = time + 1/60
+
+    if enemyBox.pet then
+        if enemyBox.pet.animationBox.y > 16*24 then
+            enemyBox.pet.animationBox.y = enemyBox.pet.animationBox.y -1
+        else
+            enemyBox.pet.animationBox.y = -100
+        end
+    end
+
+    if explorerBox[1].pet then
+        if explorerBox[1].pet.animationBox.y > 16*24 then
+            explorerBox[1].pet.animationBox.y = explorerBox[1].pet.animationBox.y -1
+        else
+            explorerBox[1].pet.animationBox.y = -100
+        end
+    end
+
+end
+
+function drawMenu()
+    love.graphics.draw(love.graphics.newText( font , 'MAIN MENU' ) , titleBox.box.x , titleBox.box.y )
+    love.graphics.draw(love.graphics.newText( font , '> CONTINUE' ) , optionBox[1].box.x , optionBox[1].box.y)
+    love.graphics.draw(love.graphics.newText( font , '> NEW GAME' ), optionBox[2].box.x , optionBox[2].box.y)
+end
+
+function MenuScreen( x , y , button , istouch )
+    if button == 1 then
+        if inBox( x , y , optionBox[1].box) then -- continue
+            screen = 'farm'
+        elseif inBox( x , y , optionBox[2].box) then -- new game
+            time = 0
+            screen = 'farm'
+        end
+    end
 end
 
 function drawMainPetBox(x,y)
@@ -128,41 +182,9 @@ function drawInventoryBox(x,y)
     end
 end
 
-function love.update(dt)
-    saveGame()
-    time = time + 1/60
-
-    if enemyBox.pet then
-        if enemyBox.pet.animationBox.y > 16*24 then
-            enemyBox.pet.animationBox.y = enemyBox.pet.animationBox.y -1
-        else
-            enemyBox.pet.animationBox.y = -100
-        end
-    end
-
-    if explorerBox[1].pet then
-        if explorerBox[1].pet.animationBox.y > 16*24 then
-            explorerBox[1].pet.animationBox.y = explorerBox[1].pet.animationBox.y -1
-        else
-            explorerBox[1].pet.animationBox.y = -100
-        end
-    end
-
-end
-
---[[
-    DRAW SCREEN FUNCTIONS
-]]
-
-function drawMenu()
-    love.graphics.draw(love.graphics.newText( font , 'MAIN MENU' ) , titleBox.box.x , titleBox.box.y )
-    love.graphics.draw(love.graphics.newText( font , '> CONTINUE' ) , optionBox[1].box.x , optionBox[1].box.y)
-    love.graphics.draw(love.graphics.newText( font , '> NEW GAME' ), optionBox[2].box.x , optionBox[2].box.y)
-end
-
 function drawFarm()
     love.graphics.draw(love.graphics.newText( font , '     FARM' ) , titleBox.box.x , titleBox.box.y  )
-    love.graphics.print(math.floor(time))
+    love.graphics.draw( love.graphics.newImage('images/farm.png') , 0 , 16 )
     love.graphics.print('Creature: '..mainPetBox.pet.name , 0 , 16)
     love.graphics.print('Health: '..mainPetBox.pet.health , 0 , 16*2)
     love.graphics.print('Strength: '..mainPetBox.pet.strength , 0 , 16*3)
@@ -176,8 +198,26 @@ function drawFarm()
     drawInventoryBox(9*12,16*18)
     love.graphics.draw( mainPetBox.pet.img , mainPetBox.box.x , mainPetBox.box.y )
     drawPetBox(0,0)
-    love.graphics.draw(love.graphics.newText( font , '> ADVENTURE' ) , optionBox[4].box.x , optionBox[4].box.y )
-    love.graphics.draw(love.graphics.newText( font , '> SHOP' ) , optionBox[5].box.x , optionBox[5].box.y )
+    love.graphics.draw(love.graphics.newText( font , '> ADVENTURE' ) , optionBox[2].box.x , optionBox[2].box.y )
+    love.graphics.draw(love.graphics.newText( font , '> SHOP' ) , optionBox[3].box.x , optionBox[3].box.y )
+end
+
+function FarmScreen( x , y , button , istouch )
+    if button == 1 then
+        if inBox(x,y,optionBox[2].box) then
+            screen = 'dungeon selection'
+        elseif inBox(x,y,optionBox[3].box) then
+            screen = 'shop'
+        end
+        for i = 1 , #farmBox do
+            if inBox(x,y,farmBox[i].box) then
+                local tmp = farmBox[i].pet
+                farmBox[i].pet = mainPetBox.pet
+                mainPetBox.pet = tmp
+                tmp = nil
+            end
+        end
+    end
 end
 
 function drawTeamSelection()
@@ -195,9 +235,52 @@ function drawTeamSelection()
     end
 end
 
+function teamSelectionScreen( x , y , button , istouch )
+    if button == 1 then
+        if inBox(x,y,optionBox[3].box) then
+            if teamBox[1].pet then -- check if there is any pet selected
+                enemyBox.pet = Adventure.Dungeons.Forest.enemies[1]
+                screen = 'forest'
+            end
+        end
+        for j = 1 , #selectionBox do
+            if inBox(x,y,selectionBox[j].box) then
+                if not teamBox[1].pet then
+                    teamBox[1].pet = selectionBox[j].pet
+                    explorerBox[1].pet = teamBox[1].pet
+                    selectionBox[j].pet = nil
+                elseif not teamBox[2].pet then
+                    teamBox[2].pet = selectionBox[j].pet
+                    explorerBox[2].pet = teamBox[2].pet
+                    selectionBox[j].pet = nil
+                elseif not teamBox[3].pet then
+                    teamBox[3].pet = selectionBox[j].pet
+                    explorerBox[3].pet = teamBox[3].pet
+                    selectionBox[j].pet = nil
+                end
+            end
+        end
+    end
+end
+
+
+
+function dungeonSelectionScreen( x , y , button , istouch )
+    if button == 1 then
+        if inBox(x,y,optionBox[1].box) then
+            selectionBox[1].pet = mainPetBox.pet
+            if farmBox[1].pet then selectionBox[2].pet = farmBox[1].pet end
+            if farmBox[2].pet then selectionBox[3].pet = farmBox[2].pet end 
+            if farmBox[3].pet then selectionBox[4].pet = farmBox[3].pet end
+            screen = 'team selection'
+        end
+    end
+end
+
+
 function drawForest()
     love.graphics.draw(love.graphics.newText( font , 'FOREST' ) , titleBox.box.x , titleBox.box.y  )
-    love.graphics.draw( Adventure.Dungeons.Forest.img , -9*4 , 16*4 )
+    love.graphics.draw( Adventure.Dungeons.Forest.img , -9*8 , 16 )
     for i = 1 , #explorerBox do
         if explorerBox[i].pet and explorerBox[i].pet.health > 0 then
             love.graphics.draw(love.graphics.newText( miniFont , explorerBox[i].pet.name ) , explorerBox[i].box.x -9*2, explorerBox[i].box.y - 16)
@@ -212,8 +295,6 @@ function drawForest()
         love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..enemyBox.pet.health ) , enemyBox[1].box.x + 9*7 , enemyBox[1].box.y + 16*8 )
         love.graphics.draw( love.graphics.newText( font , enemyBox.pet.animationBox.dmg ) , enemyBox.pet.animationBox.x , enemyBox.pet.animationBox.y )
     end
-    
-    -- Por que não precisa de condicional??? Só desenha quando clico na tela
 end
 
 function ForestScreen()
@@ -264,10 +345,40 @@ function ForestScreen()
         for i = 1 , 3 do explorerBox[i].pet = nil end
         screen = 'farm'
     end
+end
 
+function drawShop()
+    love.graphics.print('Coins: '..player.coins , 9*12 , 0)
+    love.graphics.print('Gems: '..player.gems , 9*20 , 0)
+    love.graphics.print('Rank: '..player.rank , 9*28 , 0)
+    love.graphics.draw(love.graphics.newText( font , 'SHOP' ) , titleBox.box.x , titleBox.box.y  )
+    for i = 1 , 4 do
+        love.graphics.draw( love.graphics.newText( miniFont , shopBox[i][1].name) , shopBox[i].box.x , shopBox[i].box.y - 16)
+        love.graphics.draw( shopBox[i][1].img , shopBox[i].box.x , shopBox[i].box.y )
+        love.graphics.draw( love.graphics.newText( miniFont , 'Cost: '..shopBox[i][1].cost) , shopBox[i].box.x + 9*8 , shopBox[i].box.y + 16)
+        love.graphics.draw( love.graphics.newText( miniFont , shopBox[i][1].text) , shopBox[i].box.x + 9*8 , shopBox[i].box.y + 16*2)
+    end
+    love.graphics.draw(love.graphics.newText( font , '> FARM' ) , shopBox[5].box.x , shopBox[5].box.y  )
+end
+
+function ShopScreen( x , y , button , istouch )
+    if button == 1 then
+        if inBox(x,y,shopBox[5].box) then
+            screen = 'farm'
+        end
+        for i = 1 , 4 do
+            if inBox(x,y,shopBox[i].box) then
+                if player.coins >= shopBox[i][1].cost and #player.inventory < 10 then
+                    player.coins = player.coins - shopBox[i][1].cost
+                    player.inventory[#player.inventory +1] = shopBox[1][1]
+                end
+            end
+        end
+    end
 end
 
 function love.draw()
+    love.graphics.print(math.floor(time))
     if screen == 'menu' then
         drawMenu()
     elseif screen == 'farm' then
@@ -279,81 +390,10 @@ function love.draw()
         drawTeamSelection()
     elseif screen == 'forest' then
         drawForest()
+    elseif screen == 'shop' then
+        drawShop()
     end
 end
-
---[[
-    SCREEN FUNCTIONS
-    - input: mouse click / touch
-    - must always switch the variable screen to change the drawing
-]]
-function MenuScreen( x , y , button , istouch )
-    if button == 1 then
-        if inBox( x , y , optionBox[1].box) then -- continue
-            screen = 'farm'
-        elseif inBox( x , y , optionBox[2].box) then -- new game
-            time = 0
-            screen = 'farm'
-        end
-    end
-end
-
-function FarmScreen( x , y , button , istouch )
-    if button == 1 then
-        if inBox(x,y,optionBox[4].box) then
-            screen = 'dungeon selection'
-        end
-        for i = 1 , #farmBox do
-            if inBox(x,y,farmBox[i].box) then
-                local tmp = farmBox[i].pet
-                farmBox[i].pet = mainPetBox.pet
-                mainPetBox.pet = tmp
-                tmp = nil
-            end
-        end
-    end
-end
-
-function dungeonSelectionScreen( x , y , button , istouch )
-    if button == 1 then
-        if inBox(x,y,optionBox[1].box) then
-            selectionBox[1].pet = mainPetBox.pet
-            if farmBox[1].pet then selectionBox[2].pet = farmBox[1].pet end
-            if farmBox[2].pet then selectionBox[3].pet = farmBox[2].pet end 
-            if farmBox[3].pet then selectionBox[4].pet = farmBox[3].pet end
-            screen = 'team selection'
-        end
-    end
-end
-
-function teamSelectionScreen( x , y , button , istouch )
-    if button == 1 then
-        if inBox(x,y,optionBox[3].box) then
-            if teamBox[1].pet then -- check if there is any pet selected
-                enemyBox.pet = Adventure.Dungeons.Forest.enemies[1]
-                screen = 'forest'
-            end
-        end
-        for j = 1 , #selectionBox do
-            if inBox(x,y,selectionBox[j].box) then
-                if not teamBox[1].pet then
-                    teamBox[1].pet = selectionBox[j].pet
-                    explorerBox[1].pet = teamBox[1].pet
-                    selectionBox[j].pet = nil
-                elseif not teamBox[2].pet then
-                    teamBox[2].pet = selectionBox[j].pet
-                    explorerBox[2].pet = teamBox[2].pet
-                    selectionBox[j].pet = nil
-                elseif not teamBox[3].pet then
-                    teamBox[3].pet = selectionBox[j].pet
-                    explorerBox[3].pet = teamBox[3].pet
-                    selectionBox[j].pet = nil
-                end
-            end
-        end
-    end
-end
-
 
 function love.mousepressed( x , y , button , istouch )
     if screen == 'menu' then
@@ -366,6 +406,8 @@ function love.mousepressed( x , y , button , istouch )
         teamSelectionScreen( x , y , button , istouch )
     elseif screen == 'forest' then
         ForestScreen() -- tirar do mousepressed
+    elseif screen == 'shop' then
+        ShopScreen( x , y , button , istouch )
     end
 end
 
