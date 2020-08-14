@@ -1,6 +1,7 @@
 --[[
     Tamagotchi by nasa
    
+    todo
     - recrutar inimigo
     - recompensa de aventura
 ]]
@@ -260,12 +261,18 @@ function drawTeamSelection()
     for i = 1 , #selectionBox do
         if selectionBox[i].pet then
             love.graphics.draw( selectionBox[i].pet.miniImg , selectionBox[i].box.x , selectionBox[i].box.y )
+            if selectionBox[i].pet.equip then
+                love.graphics.draw( selectionBox[i].pet.equipMiniImg , selectionBox[i].box.x , selectionBox[i].box.y + 16*2 )
+            end
         end
     end
     love.graphics.draw(love.graphics.newText(font , '> CONFIRM TEAM') , optionBox[3].box.x , optionBox[3].box.y)
     for i = 1 , #teamBox do
         if teamBox[i].pet then
             love.graphics.draw( teamBox[i].pet.miniImg , teamBox[i].box.x , teamBox[i].box.y )
+            if teamBox[i].pet.equip then
+                love.graphics.draw( teamBox[i].pet.equipMiniImg , teamBox[i].box.x , teamBox[i].box.y + 16*2 )
+            end
         end
     end
 end
@@ -319,6 +326,9 @@ function drawForest()
         if explorerBox[i].pet and explorerBox[i].pet.health > 0 then
             love.graphics.draw(love.graphics.newText( miniFont , explorerBox[i].pet.name ) , explorerBox[i].box.x -9*2, explorerBox[i].box.y - 16)
             love.graphics.draw(explorerBox[i].pet.miniImg , explorerBox[i].box.x -9*4 , explorerBox[i].box.y )
+            if explorerBox[i].pet.equip then
+                love.graphics.draw(explorerBox[i].pet.equipMiniImg , explorerBox[i].box.x -9*4 , explorerBox[i].box.y + 16*2 )
+            end
             love.graphics.draw(love.graphics.newText( miniFont , 'HP: '..explorerBox[i].pet.health ) , explorerBox[i].box.x -9*3, explorerBox[i].box.y + 16*4)
             love.graphics.draw( love.graphics.newText( font , explorerBox[i].pet.animationBox.dmg ) , explorerBox[i].pet.animationBox.x , explorerBox[i].pet.animationBox.y )
         end
